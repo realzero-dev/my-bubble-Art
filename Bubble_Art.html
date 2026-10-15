@@ -13,6 +13,7 @@
 </head>
 <body class="bg-slate-900 text-slate-100 min-h-screen flex flex-col">
 
+    <!-- 로딩 팝업 -->
     <div id="loadingOverlay" class="fixed inset-0 bg-black/70 backdrop-blur-sm z-50 flex items-center justify-center hidden">
         <div class="bg-slate-800 border border-slate-700 px-6 py-4 rounded-2xl flex items-center space-x-3 shadow-2xl">
             <div class="w-5 h-5 border-2 border-pink-500 border-t-transparent rounded-full animate-spin"></div>
@@ -20,44 +21,67 @@
         </div>
     </div>
 
-    <header class="bg-slate-800 border-b border-slate-700 px-6 py-4 flex justify-between items-center shadow-md">
-        <div class="flex items-center space-x-3">
-            <span class="bg-pink-500 text-white text-xs font-bold px-2.5 py-1 rounded-full uppercase tracking-wider">Artist Studio</span>
-            <h1 id="headerTitle" class="text-xl font-bold">아티스트 대시보드</h1>
+    <!-- 1. 아티스트 비밀번호 인증 화면 -->
+    <div id="artistAuthScreen" class="fixed inset-0 bg-slate-900 z-40 flex items-center justify-center p-4">
+        <div class="bg-slate-800 border border-slate-700 w-full max-w-md rounded-3xl p-8 shadow-2xl flex flex-col justify-center">
+            <div class="text-center mb-8">
+                <span class="bg-pink-500/20 text-pink-400 text-xs font-bold px-3 py-1 rounded-full border border-pink-500/30">ARTIST STUDIO</span>
+                <h1 class="text-2xl font-black mt-3 text-white">아티스트 인증</h1>
+                <p class="text-sm text-slate-400 mt-1">대시보드 비밀번호를 입력해주세요.</p>
+            </div>
+            <div class="space-y-4">
+                <div>
+                    <label class="block text-xs font-bold text-slate-400 mb-1">비밀번호</label>
+                    <input type="password" id="artistPasswordInput" placeholder="비밀번호를 입력하세요" class="w-full bg-slate-900 border border-slate-700 rounded-2xl px-4 py-3 text-sm text-white focus:outline-none focus:border-pink-500">
+                </div>
+                <button onclick="verifyArtistPassword()" class="w-full bg-pink-600 hover:bg-pink-500 text-white font-bold py-3.5 rounded-2xl transition shadow-lg shadow-pink-600/30 cursor-pointer">접속하기</button>
+                <p id="authErrorMsg" class="text-xs text-red-400 text-center font-medium hidden">비밀번호가 올바르지 않습니다.</p>
+            </div>
         </div>
-        <div class="flex items-center space-x-2">
-            <button onclick="openConfigModal()" class="bg-slate-700 hover:bg-slate-600 px-3.5 py-2 rounded-xl text-sm font-medium transition cursor-pointer">⚙️ 설정</button>
-            <button onclick="openFanboxModal()" class="bg-slate-700 hover:bg-slate-600 px-4 py-2 rounded-xl text-sm font-medium transition flex items-center space-x-2 cursor-pointer">
-                <span>📥 팬레터함</span>
-                <span id="fanboxBadge" class="bg-pink-500 text-white text-xs px-2 py-0.5 rounded-full font-bold">0</span>
-            </button>
-        </div>
-    </header>
+    </div>
 
-    <main class="flex-1 max-w-4xl w-full mx-auto p-4 flex flex-col">
-        <div class="bg-slate-800/60 border border-slate-700 p-4 rounded-2xl mb-4 text-sm text-slate-300 flex justify-between items-center">
-            <span>💡 실시간 고속 동기화 모드 작동 중</span>
-            <span id="syncStatus" class="text-xs text-emerald-400 font-bold">● 연결됨</span>
-        </div>
+    <!-- 2. 실제 아티스트 대시보드 화면 -->
+    <div id="artistDashboard" class="hidden flex-col min-h-screen">
+        <header class="bg-slate-800 border-b border-slate-700 px-6 py-4 flex justify-between items-center shadow-md">
+            <div class="flex items-center space-x-3">
+                <span class="bg-pink-500 text-white text-xs font-bold px-2.5 py-1 rounded-full uppercase tracking-wider">Artist Studio</span>
+                <h1 id="headerTitle" class="text-xl font-bold">아티스트 대시보드</h1>
+            </div>
+            <div class="flex items-center space-x-2">
+                <button onclick="openConfigModal()" class="bg-slate-700 hover:bg-slate-600 px-3.5 py-2 rounded-xl text-sm font-medium transition cursor-pointer">⚙️ 설정</button>
+                <button onclick="openFanboxModal()" class="bg-slate-700 hover:bg-slate-600 px-4 py-2 rounded-xl text-sm font-medium transition flex items-center space-x-2 cursor-pointer">
+                    <span>📥 팬레터함</span>
+                    <span id="fanboxBadge" class="bg-pink-500 text-white text-xs px-2 py-0.5 rounded-full font-bold">0</span>
+                </button>
+                <button onclick="artistLogout()" class="bg-slate-700/50 hover:bg-red-600/30 text-slate-400 hover:text-red-300 px-3 py-2 rounded-xl text-xs transition cursor-pointer">잠금</button>
+            </div>
+        </header>
 
-        <div id="chatContainer" class="flex-1 bg-slate-800/40 border border-slate-800 rounded-3xl p-4 overflow-y-auto space-y-4 mb-4 min-h-[300px] max-h-[55vh]">
-            <p class="text-center text-slate-500 py-10">메시지를 불러오는 중...</p>
-        </div>
+        <main class="flex-1 max-w-4xl w-full mx-auto p-4 flex flex-col">
+            <div class="bg-slate-800/60 border border-slate-700 p-4 rounded-2xl mb-4 text-sm text-slate-300 flex justify-between items-center">
+                <span>💡 실시간 고속 동기화 모드 작동 중</span>
+                <span id="syncStatus" class="text-xs text-emerald-400 font-bold">● 연결됨</span>
+            </div>
 
-        <div id="imagePreviewContainer" class="hidden mb-3 relative inline-block">
-            <img id="imagePreview" src="" alt="미리보기" class="h-24 rounded-xl border border-slate-700 object-cover">
-            <button id="removeImageBtn" onclick="removeImage()" class="absolute -top-2 -right-2 bg-red-500 text-white rounded-full w-6 h-6 text-xs flex items-center justify-center font-bold shadow">✕</button>
-        </div>
+            <div id="chatContainer" class="flex-1 bg-slate-800/40 border border-slate-800 rounded-3xl p-4 overflow-y-auto space-y-4 mb-4 min-h-[300px] max-h-[55vh]">
+                <p class="text-center text-slate-500 py-10">메시지를 불러오는 중...</p>
+            </div>
 
-        <div class="bg-slate-800 p-3 rounded-2xl border border-slate-700 flex items-center space-x-3">
-            <label class="cursor-pointer bg-slate-700 hover:bg-slate-600 text-slate-300 px-3.5 py-3 rounded-xl transition flex items-center justify-center">
-                📷
-                <input type="file" id="imageInput" accept="image/*" class="hidden" onchange="handleImageSelect(event)">
-            </label>
-            <input type="text" id="messageInput" placeholder="팬들에게 보낼 메시지를 입력하세요..." class="flex-1 bg-slate-900 border border-slate-700 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-pink-500">
-            <button id="sendBtn" onclick="sendMessage()" class="bg-pink-600 hover:bg-pink-500 text-white px-6 py-3 rounded-xl font-bold transition shadow-lg shadow-pink-600/35 cursor-pointer">전송</button>
-        </div>
-    </main>
+            <div id="imagePreviewContainer" class="hidden mb-3 relative inline-block">
+                <img id="imagePreview" src="" alt="미리보기" class="h-24 rounded-xl border border-slate-700 object-cover">
+                <button id="removeImageBtn" onclick="removeImage()" class="absolute -top-2 -right-2 bg-red-500 text-white rounded-full w-6 h-6 text-xs flex items-center justify-center font-bold shadow">✕</button>
+            </div>
+
+            <div class="bg-slate-800 p-3 rounded-2xl border border-slate-700 flex items-center space-x-3">
+                <label class="cursor-pointer bg-slate-700 hover:bg-slate-600 text-slate-300 px-3.5 py-3 rounded-xl transition flex items-center justify-center">
+                    📷
+                    <input type="file" id="imageInput" accept="image/*" class="hidden" onchange="handleImageSelect(event)">
+                </label>
+                <input type="text" id="messageInput" placeholder="팬들에게 보낼 메시지를 입력하세요..." class="flex-1 bg-slate-900 border border-slate-700 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-pink-500">
+                <button id="sendBtn" onclick="sendMessage()" class="bg-pink-600 hover:bg-pink-500 text-white px-6 py-3 rounded-xl font-bold transition shadow-lg shadow-pink-600/35 cursor-pointer">전송</button>
+            </div>
+        </main>
+    </div>
 
     <!-- 설정 및 초기화 모달 -->
     <div id="configModal" class="fixed inset-0 bg-black/70 backdrop-blur-sm hidden flex items-center justify-center p-4 z-50">
@@ -74,6 +98,10 @@
                 <div>
                     <label class="block text-xs font-bold text-slate-400 mb-1">유저 입장 코드</label>
                     <input type="text" id="entryCodeInput" class="w-full bg-slate-900 border border-slate-700 rounded-xl px-4 py-2.5 text-white text-sm focus:outline-none focus:border-pink-500">
+                </div>
+                <div>
+                    <label class="block text-xs font-bold text-slate-400 mb-1">아티스트 대시보드 비밀번호 변경</label>
+                    <input type="text" id="artistPassInput" class="w-full bg-slate-900 border border-slate-700 rounded-xl px-4 py-2.5 text-white text-sm focus:outline-none focus:border-pink-500">
                 </div>
             </div>
             <button onclick="saveConfig()" class="w-full bg-pink-600 hover:bg-pink-500 text-white font-bold py-3 rounded-xl transition cursor-pointer">설정 저장하기</button>
@@ -100,6 +128,9 @@
 
         let currentArtistName = localStorage.getItem('bubble_artist_name') || "아티스트";
         let currentEntryCode = localStorage.getItem('bubble_entry_code') || "bubble123";
+        let artistDashboardPassword = localStorage.getItem('bubble_artist_pass') || "admin123"; // 기본 비밀번호: admin123
+        let isArtistLoggedIn = localStorage.getItem('bubble_artist_logged_in') === "true";
+
         let activeQuote = null;
         let attachedImageBase64 = null;
         let chatCache = [];
@@ -115,9 +146,52 @@
             document.getElementById('headerTitle').innerText = `${currentArtistName} 대시보드`;
         }
 
+        window.onload = function() {
+            if (isArtistLoggedIn) {
+                document.getElementById('artistAuthScreen').classList.add('hidden');
+                document.getElementById('artistDashboard').classList.remove('hidden');
+                document.getElementById('artistDashboard').style.display = 'flex';
+                updateHeader();
+                fetchSheetData();
+                setInterval(fetchSheetData, 1200);
+            }
+
+            document.getElementById('messageInput').addEventListener('keypress', function(e) {
+                if (e.key === 'Enter') sendMessage();
+            });
+
+            document.getElementById('artistPasswordInput').addEventListener('keypress', function(e) {
+                if (e.key === 'Enter') verifyArtistPassword();
+            });
+        };
+
+        function verifyArtistPassword() {
+            const inputVal = document.getElementById('artistPasswordInput').value.trim();
+            const errorMsg = document.getElementById('authErrorMsg');
+
+            if (inputVal === artistDashboardPassword) {
+                isArtistLoggedIn = true;
+                localStorage.setItem('bubble_artist_logged_in', "true");
+                document.getElementById('artistAuthScreen').classList.add('hidden');
+                document.getElementById('artistDashboard').classList.remove('hidden');
+                document.getElementById('artistDashboard').style.display = 'flex';
+                updateHeader();
+                fetchSheetData();
+                setInterval(fetchSheetData, 1200);
+            } else {
+                errorMsg.classList.remove('hidden');
+            }
+        }
+
+        function artistLogout() {
+            localStorage.removeItem('bubble_artist_logged_in');
+            location.reload();
+        }
+
         function openConfigModal() {
             document.getElementById('artistNameInput').value = currentArtistName;
             document.getElementById('entryCodeInput').value = currentEntryCode;
+            document.getElementById('artistPassInput').value = artistDashboardPassword;
             document.getElementById('configModal').classList.remove('hidden');
         }
         function closeConfigModal() { document.getElementById('configModal').classList.add('hidden'); }
@@ -127,13 +201,17 @@
         function saveConfig() {
             const newName = document.getElementById('artistNameInput').value.trim();
             const newCode = document.getElementById('entryCodeInput').value.trim();
-            if (!newName || !newCode) return alert("이름과 코드를 입력해주세요.");
+            const newPass = document.getElementById('artistPassInput').value.trim();
+            if (!newName || !newCode || !newPass) return alert("모든 항목을 입력해주세요.");
 
             showLoading("설정 저장 중...");
             currentArtistName = newName;
             currentEntryCode = newCode;
+            artistDashboardPassword = newPass;
+
             localStorage.setItem('bubble_artist_name', currentArtistName);
             localStorage.setItem('bubble_entry_code', currentEntryCode);
+            localStorage.setItem('bubble_artist_pass', artistDashboardPassword);
             updateHeader();
 
             fetch(GOOGLE_API_URL, {
@@ -185,7 +263,6 @@
             fetch(GOOGLE_API_URL, { redirect: 'follow' })
                 .then(res => res.json())
                 .then(data => {
-                    hideLoading();
                     if (data.config && data.config.artistName) {
                         currentArtistName = data.config.artistName;
                         currentEntryCode = data.config.entryCode;
@@ -196,7 +273,7 @@
                     if (data.chats) { chatCache = data.chats; renderChat(chatCache); }
                     if (data.fanletters) { fanLetterCache = data.fanletters; renderFanLetters(fanLetterCache); }
                 })
-                .catch(() => hideLoading());
+                .catch(() => {});
         }
 
         function renderChat(chats) {
@@ -285,17 +362,6 @@
             messageInput.focus();
             closeFanboxModal();
         }
-
-        window.onload = function() {
-            showLoading("서버 연결 및 데이터 확인 중...");
-            updateHeader();
-            fetchSheetData();
-            setInterval(fetchSheetData, 1200);
-
-            document.getElementById('messageInput').addEventListener('keypress', function(e) {
-                if (e.key === 'Enter') sendMessage();
-            });
-        };
     </script>
 </body>
 </html>
